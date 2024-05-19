@@ -24,24 +24,24 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	m5 := md5.New()
 	io.WriteString(m5, requestUri)
 	fmt.Printf("hash is %x", m5.Sum(nil))
-	//key := fmt.Sprintf("md5/%x", m5.Sum(nil))
+	key := fmt.Sprintf("md5/%x", m5.Sum(nil))
 	m5str := fmt.Sprintf("md5/%x", m5.Sum(nil))
-	key := fmt.Sprintf("hex/%x", requestUri)
+	//key := fmt.Sprintf("hex/%x", requestUri)
 
 	rc, err := d.Storing.Bucket(BUCKET).Object(key).NewReader(d.Ctx)
 	if err != nil {
 
 		//	object doesn't exist. Fetch and write
 
-		merr := map[string]any{
-			"error":      err,
-			"msg":        "we tried to open a reader but it failed",
-			"todo":       "check for specific type of error indicating 404",
-			"m5str":      m5str,
-			"key":        key,
-			"requestUri": requestUri,
-		}
-		d.Slog(merr, logging.Info)
+		// merr := map[string]any{
+		// 	"error":      err,
+		// 	"msg":        "we tried to open a reader but it failed",
+		// 	"todo":       "check for specific type of error indicating 404",
+		// 	"m5str":      m5str,
+		// 	"key":        key,
+		// 	"requestUri": requestUri,
+		// }
+		// d.Slog(merr, logging.Info)
 
 		//	create a bucket writer
 		bucketWriter := d.Storing.Bucket(BUCKET).Object(key).NewWriter(d.Ctx)
@@ -86,14 +86,14 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		//	pipe the response to our upstream request, to bucketWriter _and_ the main http.Response
 		r2 := io.TeeReader(resp.Body, bucketWriter)
 		i, err := io.Copy(httpWriter, r2)
-		merr = map[string]any{
-			"bytes_written": i,
-			"msg":           "operation seems successful. We wrote the the bucket and to the http response",
-			"m5str":         m5str,
-			"key":           key,
-			"requestUri":    requestUri,
-		}
-		d.Slog(merr, logging.Info)
+		// merr = map[string]any{
+		// 	"bytes_written": i,
+		// 	"msg":           "operation seems successful. We wrote the the bucket and to the http response",
+		// 	"m5str":         m5str,
+		// 	"key":           key,
+		// 	"requestUri":    requestUri,
+		// }
+		// d.Slog(merr, logging.Info)
 		log.Printf("%d bytes written", i)
 		if err != nil {
 			log.Fatal(err)
@@ -126,12 +126,12 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 	}
 
-	merr := map[string]any{
-		"msg":        "lifecycle complete",
-		"requestUri": requestUri,
-		"key":        key,
-	}
-	d.Slog(merr, logging.Debug)
+	// merr := map[string]any{
+	// 	"msg":        "lifecycle complete",
+	// 	"requestUri": requestUri,
+	// 	"key":        key,
+	// }
+	// d.Slog(merr, logging.Debug)
 
 	log.Printf("The requestUri was %s and the hash is %s\n", requestUri, key)
 }
