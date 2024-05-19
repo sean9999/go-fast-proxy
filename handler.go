@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	logging "cloud.google.com/go/logging"
+	"cloud.google.com/go/storage"
 )
 
 type CacheTuple struct {
@@ -44,12 +45,12 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 		//	create a bucket writer
 		bucketWriter := d.Storing.Bucket(BUCKET).Object(key).NewWriter(d.Ctx)
-		// bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
-		// 	"requestUri": requestUri,
-		// 	"key":        key,
-		// 	"m5str":      m5str,
-		// 	"nerd":       "poo",
-		// }}
+		bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
+			"requestUri": requestUri,
+			"key":        key,
+			"m5str":      m5str,
+			"nerd":       "poo",
+		}}
 
 		//	create a new HTTP request to upstream server
 		client := &http.Client{}
