@@ -2,7 +2,10 @@ module github.com/sean9999/go-fast-proxy
 
 go 1.22.1
 
-require cloud.google.com/go/storage v1.41.0
+require (
+	cloud.google.com/go/logging v1.9.0
+	cloud.google.com/go/storage v1.41.0
+)
 
 require (
 	cloud.google.com/go v0.112.2 // indirect
@@ -10,6 +13,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
+	cloud.google.com/go/longrunning v0.5.7 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
