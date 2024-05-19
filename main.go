@@ -61,7 +61,7 @@ func handler(httpWriter http.ResponseWriter, httpReader *http.Request) {
 
 		client := &http.Client{}
 
-		newAddress := fmt.Sprintf("https://goproxy.io/%s", httpReader.RequestURI)
+		newAddress := fmt.Sprintf("https://goproxy.io%s", httpReader.RequestURI)
 
 		log.Printf("newAddress is %s", newAddress)
 
