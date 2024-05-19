@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"crypto/md5"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -20,16 +22,24 @@ type CacheTuple struct {
 func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Request) {
 	requestUri := httpReader.URL.RequestURI()
 
+	//	base64
+	baseBuf := new(bytes.Buffer)
+	input := []byte(requestUri)
+	encoder := base64.NewEncoder(base64.StdEncoding, baseBuf)
+	encoder.Write(input)
+
+	//	hex
+	hex := fmt.Sprintf("%x", requestUri)
+
+	//	md5
 	m5 := md5.New()
-	io.WriteString(m5, requestUri)
-	fmt.Printf("hash is %x", m5.Sum(nil))
-	key := fmt.Sprintf("md5/%x", m5.Sum(nil))
-	//m5str := fmt.Sprintf("md5/%x", m5.Sum(nil))
+	io.WriteString(m5, hex)
+	m5str := fmt.Sprintf("md5/%x", m5.Sum(nil))
 	//key := fmt.Sprintf("hex/%x", requestUri)
 
-	log.Println(key)
+	log.Println(hex, m5str)
 
-	rc, err := d.Store.Bucket(storageBucket).Object(key).NewReader(d.Ctx)
+	rc, err := d.Store.Bucket(storageBucket).Object(hex).NewReader(d.Ctx)
 	if err != nil {
 
 		log.Println(rc, err)
@@ -49,11 +59,13 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		// d.Slog(merr, logging.Info)
 
 		//	create a bucket writer
-		bucketWriter := d.Store.Bucket(storageBucket).Object(key).NewWriter(d.Ctx)
+		bucketWriter := d.Store.Bucket(storageBucket).Object(hex).NewWriter(d.Ctx)
 		bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
 			"requestUri": requestUri,
-			"key":        key,
+			"key":        hex,
 			"nerd":       "poo",
+			"m5str":      m5str,
+			"base64":     baseBuf.String(),
 		}}
 
 		//	create a new HTTP request to upstream server
@@ -140,5 +152,5 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	// }
 	// d.Slog(merr, logging.Debug)
 
-	log.Printf("The requestUri was %s and the hash is %s\n", requestUri, key)
+	log.Printf("The requestUri was %s and the hash is %s\n", requestUri, hex)
 }
