@@ -49,18 +49,25 @@ func handler(httpWriter http.ResponseWriter, httpReader *http.Request) {
 		log.Fatal(err)
 	}
 
-	// Read the object1 from bucket.
 	rc, err := client.Bucket(BUCKET).Object(key).NewReader(ctx)
 	if err != nil {
+
+		//	object doesn't exist. Fetch and write
 
 		log.Println(err)
 
 		bucketWriter := client.Bucket(BUCKET).Object(key).NewWriter(ctx)
 
 		client := &http.Client{}
-		redir := httpReader.WithContext(ctx)
-		redir.URL.Host = "goproxy.io"
-		redir.Host = "goproxy.io"
+
+		newAddress := fmt.Sprintf("https://goproxy.io/%s", httpReader.RequestURI)
+
+		log.Printf("newAddress is %s", newAddress)
+
+		redir, err := http.NewRequestWithContext(ctx, http.MethodGet, newAddress, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		resp, err := client.Do(redir)
 		if err != nil {
@@ -76,6 +83,9 @@ func handler(httpWriter http.ResponseWriter, httpReader *http.Request) {
 		}
 
 	} else {
+
+		//	object exists. Read from cache
+
 		defer rc.Close()
 		io.Copy(httpWriter, rc)
 	}
