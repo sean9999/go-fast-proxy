@@ -86,6 +86,7 @@ func handler(httpWriter http.ResponseWriter, httpReader *http.Request) {
 	} else {
 
 		//	object exists. Read from cache
+		log.Println("CACHE HIT!")
 
 		defer rc.Close()
 		io.Copy(httpWriter, rc)
