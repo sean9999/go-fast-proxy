@@ -22,13 +22,15 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	io.WriteString(m5, requestUri)
 	fmt.Printf("hash is %x", m5.Sum(nil))
 	key := fmt.Sprintf("md5/%x", m5.Sum(nil))
-	m5str := fmt.Sprintf("md5/%x", m5.Sum(nil))
+	//m5str := fmt.Sprintf("md5/%x", m5.Sum(nil))
 	//key := fmt.Sprintf("hex/%x", requestUri)
 
-	log.Println(m5str, key)
+	log.Println(key)
 
 	rc, err := d.Store.Bucket(storageBucket).Object(key).NewReader(d.Ctx)
 	if err != nil {
+
+		log.Println("CACHE miss :(")
 
 		//	object doesn't exist. Fetch and write
 
