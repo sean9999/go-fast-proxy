@@ -60,13 +60,13 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 		//	create a bucket writer
 		bucketWriter := d.Store.Bucket(storageBucket).Object(hex).NewWriter(d.Ctx)
-		bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
-			"requestUri": requestUri,
-			"key":        hex,
-			"nerd":       "poo",
-			"m5str":      m5str,
-			"base64":     baseBuf.String(),
-		}}
+		// bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
+		// 	"requestUri": requestUri,
+		// 	"key":        hex,
+		// 	"nerd":       "poo",
+		// 	"m5str":      m5str,
+		// 	"base64":     baseBuf.String(),
+		// }}
 
 		//	create a new HTTP request to upstream server
 		client := &http.Client{}
@@ -102,6 +102,22 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		//	pipe the response to our upstream request, to bucketWriter _and_ the main http.Response
 
 		r2 := io.TeeReader(resp.Body, bucketWriter)
+
+		o := d.Store.Bucket(storageBucket).Object(hex)
+
+		// Update the object to set the metadata.
+		objectAttrsToUpdate := storage.ObjectAttrsToUpdate{
+			Metadata: map[string]string{
+				"hex":  hex,
+				"base": baseBuf.String(),
+				"req":  requestUri,
+			},
+		}
+
+		if _, err := o.Update(d.Ctx, objectAttrsToUpdate); err != nil {
+			log.Fatalf("ObjectHandle(%q).Update: %s", o.BucketName(), err)
+		}
+
 		defer bucketWriter.Close()
 		i, err := io.Copy(httpWriter, r2)
 
