@@ -114,12 +114,12 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		//	object exists. Read from cache
 
 		log.Println("CACHE HIT!")
-		merr := map[string]any{
-			"msg":        "CACHE HIT",
-			"contenxt":   "we read from Google Storage",
-			"requestUri": requestUri,
-		}
-		d.Slog(merr, logging.Info)
+		// merr := map[string]any{
+		// 	"msg":        "CACHE HIT",
+		// 	"contenxt":   "we read from Google Storage",
+		// 	"requestUri": requestUri,
+		// }
+		// d.Slog(merr, logging.Info)
 
 		defer rc.Close()
 		io.Copy(httpWriter, rc)
