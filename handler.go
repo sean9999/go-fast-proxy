@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+
+	"cloud.google.com/go/storage"
 )
 
 type CacheTuple struct {
@@ -48,12 +50,11 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 		//	create a bucket writer
 		bucketWriter := d.Store.Bucket(storageBucket).Object(key).NewWriter(d.Ctx)
-		// bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
-		// 	"requestUri": requestUri,
-		// 	"key":        key,
-		// 	"m5str":      m5str,
-		// 	"nerd":       "poo",
-		// }}
+		bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
+			"requestUri": requestUri,
+			"key":        key,
+			"nerd":       "poo",
+		}}
 
 		//	create a new HTTP request to upstream server
 		client := &http.Client{}
