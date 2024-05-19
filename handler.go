@@ -30,6 +30,8 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	rc, err := d.Store.Bucket(storageBucket).Object(key).NewReader(d.Ctx)
 	if err != nil {
 
+		log.Println(rc, err)
+
 		log.Println("CACHE miss :(")
 
 		//	object doesn't exist. Fetch and write
@@ -85,8 +87,11 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		}
 
 		//	pipe the response to our upstream request, to bucketWriter _and_ the main http.Response
+
 		r2 := io.TeeReader(resp.Body, bucketWriter)
+		defer bucketWriter.Close()
 		i, err := io.Copy(httpWriter, r2)
+
 		// merr = map[string]any{
 		// 	"bytes_written": i,
 		// 	"msg":           "operation seems successful. We wrote the the bucket and to the http response",
