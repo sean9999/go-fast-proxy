@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
 	"crypto/md5"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"time"
 
 	logging "cloud.google.com/go/logging"
 	"cloud.google.com/go/storage"
@@ -23,8 +21,6 @@ type CacheTuple struct {
 func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Request) {
 	requestUri := httpReader.URL.RequestURI()
 
-	ctx := context.Background()
-
 	m5 := md5.New()
 	io.WriteString(m5, requestUri)
 	fmt.Printf("hash is %x", m5.Sum(nil))
@@ -32,7 +28,7 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	m5str := fmt.Sprintf("md5/%x", m5.Sum(nil))
 	key := fmt.Sprintf("hex/%x", requestUri)
 
-	rc, err := d.Storing.Bucket(BUCKET).Object(key).NewReader(ctx)
+	rc, err := d.Storing.Bucket(BUCKET).Object(key).NewReader(d.Ctx)
 	if err != nil {
 
 		//	object doesn't exist. Fetch and write
@@ -48,7 +44,7 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		d.Slog(merr, logging.Info)
 
 		//	create a bucket writer
-		bucketWriter := d.Storing.Bucket(BUCKET).Object(key).NewWriter(ctx)
+		bucketWriter := d.Storing.Bucket(BUCKET).Object(key).NewWriter(d.Ctx)
 		bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
 			"requestUri": requestUri,
 			"key":        key,
@@ -60,7 +56,7 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		client := &http.Client{}
 		newAddress := fmt.Sprintf("https://goproxy.io%s", httpReader.RequestURI)
 		log.Printf("newAddress is %s", newAddress)
-		redir, err := http.NewRequestWithContext(ctx, http.MethodGet, newAddress, nil)
+		redir, err := http.NewRequestWithContext(d.Ctx, http.MethodGet, newAddress, nil)
 		if err != nil {
 			merr := map[string]any{
 				"error":      err,
@@ -104,14 +100,14 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		}
 
 		//	if all is good, write to FireStore
-		caches := d.Burning.Collection("goproxy-cache-lookup/caches")
-		thisDoc := caches.Doc(key)
-		thisDoc.Create(ctx, CacheTuple{
-			Req:   requestUri,
-			Hash:  key,
-			Mtime: uint64(time.Now().UnixMicro()),
-			Atime: uint64(time.Now().UnixMicro()),
-		})
+		// caches := d.Burning.Collection("goproxy-cache-lookup/caches")
+		// thisDoc := caches.Doc(key)
+		// thisDoc.Create(d.Ctx, CacheTuple{
+		// 	Req:   requestUri,
+		// 	Hash:  key,
+		// 	Mtime: uint64(time.Now().UnixMicro()),
+		// 	Atime: uint64(time.Now().UnixMicro()),
+		// })
 
 	} else {
 
