@@ -1,18 +1,12 @@
 package main
 
 import (
-	"context"
-	"log"
-
 	"cloud.google.com/go/logging"
 )
 
-func Slog(ctx context.Context, payload any, severity logging.Severity) {
-	if loggingClient == nil {
-		log.Fatal("Failed to create logging client")
-	}
-	defer loggingClient.Close()
-	logger := loggingClient.Logger("log")
+func (d *Doggy) Slog(payload any, severity logging.Severity) {
+
+	logger := d.LoggingClient.Logger("log")
 	defer logger.Flush() // Ensure the entry is written.
 
 	logger.Log(logging.Entry{
