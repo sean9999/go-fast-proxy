@@ -9,9 +9,6 @@ import (
 	"cloud.google.com/go/logging"
 )
 
-const projectID = "proxy02-423811"
-const BUCKET = "go-proxy-cache-hash"
-
 func main() {
 
 	ctx := context.Background()
@@ -35,11 +32,11 @@ func main() {
 
 	log.Printf("listening on port %s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		merr := map[string]any{
-			"err": err,
-			"msg": "could not start http server",
-		}
-		d.Slog(merr, logging.Critical)
+		// merr := map[string]any{
+		// 	"err": err,
+		// 	"msg": "could not start http server",
+		// }
+		// d.Slog(merr, logging.Critical)
 		log.Fatal(err)
 	}
 

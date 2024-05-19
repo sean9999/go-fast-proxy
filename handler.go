@@ -6,9 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-
-	logging "cloud.google.com/go/logging"
-	"cloud.google.com/go/storage"
 )
 
 type CacheTuple struct {
@@ -28,7 +25,9 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	m5str := fmt.Sprintf("md5/%x", m5.Sum(nil))
 	//key := fmt.Sprintf("hex/%x", requestUri)
 
-	rc, err := d.Storing.Bucket(BUCKET).Object(key).NewReader(d.Ctx)
+	log.Println(m5str, key)
+
+	rc, err := d.Store.Bucket(storageBucket).Object(key).NewReader(d.Ctx)
 	if err != nil {
 
 		//	object doesn't exist. Fetch and write
@@ -44,13 +43,13 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		// d.Slog(merr, logging.Info)
 
 		//	create a bucket writer
-		bucketWriter := d.Storing.Bucket(BUCKET).Object(key).NewWriter(d.Ctx)
-		bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
-			"requestUri": requestUri,
-			"key":        key,
-			"m5str":      m5str,
-			"nerd":       "poo",
-		}}
+		bucketWriter := d.Store.Bucket(storageBucket).Object(key).NewWriter(d.Ctx)
+		// bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
+		// 	"requestUri": requestUri,
+		// 	"key":        key,
+		// 	"m5str":      m5str,
+		// 	"nerd":       "poo",
+		// }}
 
 		//	create a new HTTP request to upstream server
 		client := &http.Client{}
@@ -58,28 +57,28 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		log.Printf("newAddress is %s", newAddress)
 		redir, err := http.NewRequestWithContext(d.Ctx, http.MethodGet, newAddress, nil)
 		if err != nil {
-			merr := map[string]any{
-				"error":      err,
-				"msg":        "we tried to create a new request object",
-				"m5str":      m5str,
-				"requestUri": requestUri,
-			}
-			d.Slog(merr, logging.Alert)
+			// merr := map[string]any{
+			// 	"error":      err,
+			// 	"msg":        "we tried to create a new request object",
+			// 	"m5str":      m5str,
+			// 	"requestUri": requestUri,
+			// }
+			// d.Slog(merr, logging.Alert)
 			log.Fatal(err)
 		}
 
 		//	issue the upstream request
 		resp, err := client.Do(redir)
 		if err != nil {
-			merr := map[string]any{
-				"error":      err,
-				"msg":        "httpClient failed to Do()",
-				"m5str":      m5str,
-				"key":        key,
-				"addr":       newAddress,
-				"requestUri": requestUri,
-			}
-			d.Slog(merr, logging.Alert)
+			// merr := map[string]any{
+			// 	"error":      err,
+			// 	"msg":        "httpClient failed to Do()",
+			// 	"m5str":      m5str,
+			// 	"key":        key,
+			// 	"addr":       newAddress,
+			// 	"requestUri": requestUri,
+			// }
+			// d.Slog(merr, logging.Alert)
 			log.Fatal(err)
 		}
 
@@ -121,8 +120,8 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		// }
 		// d.Slog(merr, logging.Info)
 
-		defer rc.Close()
 		io.Copy(httpWriter, rc)
+		rc.Close()
 
 	}
 
