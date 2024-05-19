@@ -3,6 +3,7 @@ module github.com/sean9999/go-fast-proxy
 go 1.22.1
 
 require (
+	cloud.google.com/go/firestore v1.15.0
 	cloud.google.com/go/logging v1.9.0
 	cloud.google.com/go/storage v1.41.0
 )
