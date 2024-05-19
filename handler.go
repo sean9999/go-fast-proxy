@@ -38,11 +38,12 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		//	object doesn't exist. Fetch and write
 
 		merr := map[string]any{
-			"error": err,
-			"msg":   "we tried to open a reader but it failed",
-			"todo":  "check for specific type of error indicating 404",
-			"m5str": m5str,
-			"key":   key,
+			"error":      err,
+			"msg":        "we tried to open a reader but it failed",
+			"todo":       "check for specific type of error indicating 404",
+			"m5str":      m5str,
+			"key":        key,
+			"requestUri": requestUri,
 		}
 		d.Slog(merr, logging.Info)
 
@@ -62,9 +63,10 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		redir, err := http.NewRequestWithContext(ctx, http.MethodGet, newAddress, nil)
 		if err != nil {
 			merr := map[string]any{
-				"error": err,
-				"msg":   "we tried to create a new request object",
-				"m5str": m5str,
+				"error":      err,
+				"msg":        "we tried to create a new request object",
+				"m5str":      m5str,
+				"requestUri": requestUri,
 			}
 			d.Slog(merr, logging.Alert)
 			log.Fatal(err)
@@ -74,11 +76,12 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		resp, err := client.Do(redir)
 		if err != nil {
 			merr := map[string]any{
-				"error": err,
-				"msg":   "httpClient failed to Do()",
-				"m5str": m5str,
-				"key":   key,
-				"addr":  newAddress,
+				"error":      err,
+				"msg":        "httpClient failed to Do()",
+				"m5str":      m5str,
+				"key":        key,
+				"addr":       newAddress,
+				"requestUri": requestUri,
 			}
 			d.Slog(merr, logging.Alert)
 			log.Fatal(err)
@@ -92,6 +95,7 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 			"msg":           "operation seems successful. We wrote the the bucket and to the http response",
 			"m5str":         m5str,
 			"key":           key,
+			"requestUri":    requestUri,
 		}
 		d.Slog(merr, logging.Info)
 		log.Printf("%d bytes written", i)
@@ -115,8 +119,9 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 		log.Println("CACHE HIT!")
 		merr := map[string]any{
-			"msg":      "CACHE HIT",
-			"contenxt": "we read from Google Storage",
+			"msg":        "CACHE HIT",
+			"contenxt":   "we read from Google Storage",
+			"requestUri": requestUri,
 		}
 		d.Slog(merr, logging.Info)
 

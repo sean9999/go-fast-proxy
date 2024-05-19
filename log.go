@@ -5,7 +5,7 @@ import (
 )
 
 func (d *Doggy) Slog(payload any, severity logging.Severity) {
-	logger := d.Logging.Logger("log")
+	logger := d.Logging.Logger("app")
 	defer logger.Flush() // Ensure the entry is written.
 
 	logger.Log(logging.Entry{
