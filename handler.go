@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/md5"
 	"fmt"
 	"io"
 	"log"
@@ -23,10 +22,12 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 	ctx := context.Background()
 
-	m5 := md5.New()
-	io.WriteString(m5, requestUri)
-	fmt.Printf("hash is %x", m5.Sum(nil))
-	key := fmt.Sprintf("md5/%x", m5.Sum(nil))
+	//m5 := md5.New()
+	//io.WriteString(m5, requestUri)
+	//fmt.Printf("hash is %x", m5.Sum(nil))
+	//key := fmt.Sprintf("md5/%x", m5.Sum(nil))
+
+	key := fmt.Sprintf("hex/%x", requestUri)
 
 	rc, err := d.StorageClient.Bucket(BUCKET).Object(key).NewReader(ctx)
 	if err != nil {
@@ -41,6 +42,11 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		d.Slog(merr, logging.Info)
 
 		bucketWriter := d.StorageClient.Bucket(BUCKET).Object(key).NewWriter(ctx)
+		bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
+			"requestUri": requestUri,
+			"key":        key,
+		}}
+
 		defer bucketWriter.Close()
 
 		client := &http.Client{}
