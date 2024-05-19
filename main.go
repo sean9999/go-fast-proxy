@@ -57,6 +57,7 @@ func handler(httpWriter http.ResponseWriter, httpReader *http.Request) {
 		log.Println(err)
 
 		bucketWriter := client.Bucket(BUCKET).Object(key).NewWriter(ctx)
+		defer bucketWriter.Close()
 
 		client := &http.Client{}
 
