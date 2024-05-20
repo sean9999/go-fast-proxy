@@ -21,7 +21,7 @@ type Doggy struct {
 func (d *Doggy) Teardown() {
 	d.Log.Close()
 	d.Store.Close()
-	//d.Fire.Close()
+	d.Fire.Close()
 }
 
 func NewDoggy(ctx context.Context) *Doggy {

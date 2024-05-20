@@ -106,6 +106,9 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 		r2 := io.TeeReader(resp.Body, bucketWriter)
 
+		defer bucketWriter.Close()
+		i, err := io.Copy(httpWriter, r2)
+
 		attr, err := o.Update(d.Ctx, storage.ObjectAttrsToUpdate{
 			Metadata: map[string]string{
 				"requestUri": requestUri,
@@ -118,9 +121,6 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 		log.Println(attr)
 		log.Println(err)
-
-		defer bucketWriter.Close()
-		i, err := io.Copy(httpWriter, r2)
 
 		// merr = map[string]any{
 		// 	"bytes_written": i,
