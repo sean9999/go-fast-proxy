@@ -8,7 +8,6 @@ import (
 	"path"
 
 	logging "cloud.google.com/go/logging"
-	"cloud.google.com/go/storage"
 )
 
 func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Request) {
@@ -17,7 +16,7 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	key := path.Join("plain", requestUri)
 
 	o := d.Store.Bucket(storageBucket).Object(key)
-	rc, err := o.NewReader(d.Ctx)
+	cacheReader, err := o.NewReader(d.Ctx)
 
 	if err != nil {
 
@@ -30,15 +29,10 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		//	create a bucket writer
 
 		bucketWriter := o.NewWriter(d.Ctx)
-		bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
-			"requestUri": requestUri,
-			"key":        key,
-		}}
 
 		//	create a new HTTP request to upstream server
 		client := &http.Client{}
 		newAddress := fmt.Sprintf("https://goproxy.io%s", httpReader.RequestURI)
-		log.Printf("newAddress is %s", newAddress)
 		redir, err := http.NewRequestWithContext(d.Ctx, http.MethodGet, newAddress, nil)
 		if err != nil {
 			merr := map[string]any{
@@ -77,52 +71,27 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 		defer bucketWriter.Close()
 
-		// merr = map[string]any{
-		// 	"bytes_written": i,
-		// 	"msg":           "operation seems successful. We wrote the the bucket and to the http response",
-		// 	"m5str":         m5str,
-		// 	"key":           key,
-		// 	"requestUri":    requestUri,
-		// }
-		// d.Slog(merr, logging.Info)
 		log.Printf("%d bytes written", i)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		//	if all is good, write to FireStore
-		// caches := d.Burning.Collection("goproxy-cache-lookup/caches")
-		// thisDoc := caches.Doc(key)
-		// thisDoc.Create(d.Ctx, CacheTuple{
-		// 	Req:   requestUri,
-		// 	Hash:  key,
-		// 	Mtime: uint64(time.Now().UnixMicro()),
-		// 	Atime: uint64(time.Now().UnixMicro()),
-		// })
-
 	} else {
 
 		//	object exists. Read from cache
-		defer rc.Close()
-
-		log.Println("CACHE HIT!")
-		// merr := map[string]any{
-		// 	"msg":        "CACHE HIT",
-		// 	"contenxt":   "we read from Google Storage",
-		// 	"requestUri": requestUri,
-		// }
-		// d.Slog(merr, logging.Info)
-
-		io.Copy(httpWriter, rc)
+		defer cacheReader.Close()
+		merr := map[string]any{
+			"attrs": cacheReader.Attrs,
+		}
+		d.Slog(merr, logging.Debug)
+		io.Copy(httpWriter, cacheReader)
 
 	}
 
-	// merr := map[string]any{
-	// 	"msg":        "lifecycle complete",
-	// 	"requestUri": requestUri,
-	// 	"key":        key,
-	// }
-	// d.Slog(merr, logging.Debug)
+	merr := map[string]any{
+		"requestUri": requestUri,
+		"key":        key,
+	}
+	d.Slog(merr, logging.Debug)
 
-	log.Printf("The requestUri was %s and the hash is %s\n", requestUri, key)
 }
