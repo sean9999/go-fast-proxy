@@ -27,17 +27,19 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	encoder.Write(input)
 
 	//	hex
-	hex := fmt.Sprintf("%x", requestUri)
+	//hex := fmt.Sprintf("%x", requestUri)
 
 	//	md5
 	m5 := md5.New()
-	io.WriteString(m5, hex)
+	io.WriteString(m5, requestUri)
 	m5str := fmt.Sprintf("md5/%x", m5.Sum(nil))
 	//key := fmt.Sprintf("hex/%x", requestUri)
 
-	log.Println(hex, m5str)
+	log.Println(m5str)
 
-	rc, err := d.Store.Bucket(storageBucket).Object(hex).NewReader(d.Ctx)
+	o := d.Store.Bucket(storageBucket).Object(m5str)
+
+	rc, err := o.NewReader(d.Ctx)
 
 	if err != nil {
 
@@ -58,8 +60,6 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		// d.Slog(merr, logging.Info)
 
 		//	create a bucket writer
-
-		o := d.Store.Bucket(storageBucket).Object(hex)
 
 		bucketWriter := o.NewWriter(d.Ctx)
 		// bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
@@ -172,5 +172,5 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	// }
 	// d.Slog(merr, logging.Debug)
 
-	log.Printf("The requestUri was %s and the hash is %s\n", requestUri, hex)
+	log.Printf("The requestUri was %s and the hash is %s\n", requestUri, m5str)
 }
