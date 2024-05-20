@@ -1,25 +1,18 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 )
 
-type CacheTuple struct {
-	Req   string `json:"req,omitempty"`
-	Hash  string `json:"hash,omitempty"`
-	Mtime uint64 `json:"mtime,omitempty"`
-	Atime uint64 `json:"atime,omitempty"`
-}
-
 func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Request) {
 
 	requestUri := httpReader.URL.RequestURI()
-	hex := hex.EncodeToString([]byte(requestUri))
-	key := fmt.Sprintf("hex/%x", hex)
+	//hex := hex.EncodeToString([]byte(requestUri))
+	//key := fmt.Sprintf("hex/%x", hex)
+	key := requestUri
 
 	o := d.Store.Bucket(storageBucket).Object(key)
 
