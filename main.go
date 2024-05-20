@@ -17,7 +17,6 @@ func main() {
 	d := NewDoggy(ctx)
 	defer d.Teardown()
 
-	log.Print("starting server...")
 	http.Handle("/", d)
 
 	port := os.Getenv("PORT")
