@@ -25,15 +25,15 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 		//	create a new HTTP request to upstream server
 		client := &http.Client{}
-		newAddress := fmt.Sprintf("https://goproxy.io%s", httpReader.RequestURI)
-
+		newAddress := fmt.Sprintf("%s%s", upstreamServer, httpReader.RequestURI)
 		redir, err := http.NewRequestWithContext(d.Ctx, http.MethodGet, newAddress, nil)
 		if err != nil {
 			merr := map[string]any{
-				"error":      err,
-				"msg":        "we tried to create a new request object, but it failed",
-				"key":        key,
-				"requestUri": requestUri,
+				"error":           err,
+				"msg":             "we tried to create a request, but it failed",
+				"key":             key,
+				"requestUri":      requestUri,
+				"upstreamAddress": newAddress,
 			}
 			d.Slog(merr, logging.Error)
 			log.Fatal(err)
@@ -54,8 +54,8 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		}
 		defer resp.Body.Close()
 
-		//	pipe the response to our upstream request
-		//	to bucketWriter and the main http.Response
+		//	Pipe the response of our upstream request
+		//	to bucketWriter and the main http.Response, simultaneously.
 		r2 := io.TeeReader(resp.Body, bucketWriter)
 		i, err := io.Copy(httpWriter, r2)
 		if err != nil {
@@ -82,6 +82,8 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		merr := map[string]any{
 			"attrs": cacheReader.Attrs,
 			"msg":   "cache hit",
+			"key":   key,
+			"req":   requestUri,
 		}
 		d.Slog(merr, logging.Debug)
 		io.Copy(httpWriter, cacheReader)
