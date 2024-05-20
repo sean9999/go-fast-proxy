@@ -1,16 +1,11 @@
 package main
 
 import (
-	"bytes"
-	"crypto/md5"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-
-	"cloud.google.com/go/storage"
 )
 
 type CacheTuple struct {
@@ -21,26 +16,12 @@ type CacheTuple struct {
 }
 
 func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Request) {
+
 	requestUri := httpReader.URL.RequestURI()
+	hex := hex.EncodeToString([]byte(requestUri))
+	key := fmt.Sprintf("hex/%x", hex)
 
-	//	base64
-	baseBuf := new(bytes.Buffer)
-	input := []byte(requestUri)
-	encoder := base64.NewEncoder(base64.StdEncoding, baseBuf)
-	encoder.Write(input)
-
-	//	hex
-	//hex := fmt.Sprintf("%x", requestUri)
-
-	//	md5
-	m5 := md5.New()
-	io.WriteString(m5, requestUri)
-	m5str := fmt.Sprintf("md5/%x", m5.Sum(nil))
-	//key := fmt.Sprintf("hex/%x", requestUri)
-
-	log.Println(m5str)
-
-	o := d.Store.Bucket(storageBucket).Object(m5str)
+	o := d.Store.Bucket(storageBucket).Object(key)
 
 	rc, err := o.NewReader(d.Ctx)
 
@@ -115,18 +96,6 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		}
 
 		defer bucketWriter.Close()
-		defer func(obj *storage.ObjectHandle) {
-			attr, err := obj.Update(d.Ctx, storage.ObjectAttrsToUpdate{
-				Metadata: map[string]string{
-					"requestUri": requestUri,
-					"hex":        hex.EncodeToString([]byte(requestUri)),
-					"m5str":      m5str,
-					"name":       obj.ObjectName(),
-					"base64":     baseBuf.String(),
-				},
-			})
-			log.Println(attr, err)
-		}(o)
 
 		// merr = map[string]any{
 		// 	"bytes_written": i,
@@ -175,5 +144,5 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	// }
 	// d.Slog(merr, logging.Debug)
 
-	log.Printf("The requestUri was %s and the hash is %s\n", requestUri, m5str)
+	log.Printf("The requestUri was %s and the hash is %s\n", requestUri, key)
 }
