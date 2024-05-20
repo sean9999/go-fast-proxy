@@ -9,8 +9,7 @@ import (
 var projectID = os.Getenv("PROJECT_ID")
 var storageBucket = os.Getenv("STORAGE_BUCKET")
 var port = os.Getenv("PORT")
-
-const upstreamServer = "https://goproxy.io"
+var upstreamServer = os.Getenv("UPSTREAM_SERVER")
 
 var ErrBadSettings = errors.New("bad settings")
 
@@ -23,6 +22,9 @@ func defaults() error {
 	}
 	if port == "" {
 		port = "8080"
+	}
+	if upstreamServer == "" {
+		upstreamServer = "https://goproxy.io"
 	}
 	return nil
 }
