@@ -5,49 +5,35 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"path"
 
 	logging "cloud.google.com/go/logging"
+	"cloud.google.com/go/storage"
 )
 
 func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Request) {
 
 	requestUri := httpReader.URL.RequestURI()
-	//hex := hex.EncodeToString([]byte(requestUri))
-	//key := fmt.Sprintf("hex/%x", hex)
-	key := requestUri
+	key := path.Join("plain", requestUri)
 
 	o := d.Store.Bucket(storageBucket).Object(key)
-
 	rc, err := o.NewReader(d.Ctx)
 
 	if err != nil {
 
-		log.Println(rc, err)
-
-		log.Println("CACHE miss :(")
-
-		//	object doesn't exist. Fetch and write
-
-		// merr := map[string]any{
-		// 	"error":      err,
-		// 	"msg":        "we tried to open a reader but it failed",
-		// 	"todo":       "check for specific type of error indicating 404",
-		// 	"m5str":      m5str,
-		// 	"key":        key,
-		// 	"requestUri": requestUri,
-		// }
-		// d.Slog(merr, logging.Info)
+		merr := map[string]any{
+			"msg": "cache miss",
+			"key": key,
+		}
+		d.Slog(merr, logging.Debug)
 
 		//	create a bucket writer
 
 		bucketWriter := o.NewWriter(d.Ctx)
-		// bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
-		// 	"requestUri": requestUri,
-		// 	"key":        hex,
-		// 	"nerd":       "poo",
-		// 	"m5str":      m5str,
-		// 	"base64":     baseBuf.String(),
-		// }}
+		bucketWriter.ObjectAttrs = storage.ObjectAttrs{Metadata: map[string]string{
+			"requestUri": requestUri,
+			"key":        key,
+		}}
 
 		//	create a new HTTP request to upstream server
 		client := &http.Client{}
@@ -55,28 +41,27 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		log.Printf("newAddress is %s", newAddress)
 		redir, err := http.NewRequestWithContext(d.Ctx, http.MethodGet, newAddress, nil)
 		if err != nil {
-			// merr := map[string]any{
-			// 	"error":      err,
-			// 	"msg":        "we tried to create a new request object",
-			// 	"m5str":      m5str,
-			// 	"requestUri": requestUri,
-			// }
-			// d.Slog(merr, logging.Alert)
+			merr := map[string]any{
+				"error":      err,
+				"msg":        "we tried to create a new request object",
+				"key":        key,
+				"requestUri": requestUri,
+			}
+			d.Slog(merr, logging.Alert)
 			log.Fatal(err)
 		}
 
 		//	issue the upstream request
 		resp, err := client.Do(redir)
 		if err != nil {
-			// merr := map[string]any{
-			// 	"error":      err,
-			// 	"msg":        "httpClient failed to Do()",
-			// 	"m5str":      m5str,
-			// 	"key":        key,
-			// 	"addr":       newAddress,
-			// 	"requestUri": requestUri,
-			// }
-			// d.Slog(merr, logging.Alert)
+			merr := map[string]any{
+				"error":      err,
+				"msg":        "httpClient failed to Do()",
+				"key":        key,
+				"addr":       newAddress,
+				"requestUri": requestUri,
+			}
+			d.Slog(merr, logging.Alert)
 			log.Fatal(err)
 		}
 		defer resp.Body.Close()
@@ -132,12 +117,12 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 	}
 
-	merr := map[string]any{
-		"msg":        "lifecycle complete",
-		"requestUri": requestUri,
-		"key":        key,
-	}
-	d.Slog(merr, logging.Debug)
+	// merr := map[string]any{
+	// 	"msg":        "lifecycle complete",
+	// 	"requestUri": requestUri,
+	// 	"key":        key,
+	// }
+	// d.Slog(merr, logging.Debug)
 
 	log.Printf("The requestUri was %s and the hash is %s\n", requestUri, key)
 }
