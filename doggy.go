@@ -4,9 +4,6 @@ import (
 	"context"
 	"log"
 
-	firebase "firebase.google.com/go"
-
-	"cloud.google.com/go/firestore"
 	logging "cloud.google.com/go/logging"
 	"cloud.google.com/go/storage"
 )
@@ -15,13 +12,13 @@ type Doggy struct {
 	Ctx   context.Context
 	Log   *logging.Client
 	Store *storage.Client
-	Fire  *firestore.Client
+	// Fire  *firestore.Client
 }
 
 func (d *Doggy) Teardown() {
 	d.Log.Close()
 	d.Store.Close()
-	d.Fire.Close()
+	// d.Fire.Close()
 }
 
 func NewDoggy(ctx context.Context) *Doggy {
@@ -35,15 +32,15 @@ func NewDoggy(ctx context.Context) *Doggy {
 		log.Fatal(err)
 	}
 
-	conf := &firebase.Config{ProjectID: projectID, DatabaseURL: fireBaseDb}
-	app, _ := firebase.NewApp(ctx, conf)
+	//conf := &firebase.Config{ProjectID: projectID, DatabaseURL: fireBaseDb}
+	//app, _ := firebase.NewApp(ctx, conf)
 	// if err != nil {
 	// 	storageClient.Close()
 	// 	loggingClient.Close()
 	// 	log.Fatal(err)
 	// }
 
-	fire, _ := app.Firestore(ctx)
+	//fire, _ := app.Firestore(ctx)
 	// if err != nil {
 	// 	storageClient.Close()
 	// 	loggingClient.Close()
@@ -68,7 +65,7 @@ func NewDoggy(ctx context.Context) *Doggy {
 		Ctx:   ctx,
 		Store: storageClient,
 		Log:   loggingClient,
-		Fire:  fire,
+		// Fire:  fire,
 	}
 	return d
 }

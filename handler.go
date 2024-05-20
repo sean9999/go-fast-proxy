@@ -8,8 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-
-	"cloud.google.com/go/storage"
 )
 
 type CacheTuple struct {
@@ -40,6 +38,7 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	log.Println(hex, m5str)
 
 	rc, err := d.Store.Bucket(storageBucket).Object(hex).NewReader(d.Ctx)
+
 	if err != nil {
 
 		log.Println(rc, err)
@@ -101,6 +100,7 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 			// d.Slog(merr, logging.Alert)
 			log.Fatal(err)
 		}
+		defer resp.Body.Close()
 
 		//	pipe the response to our upstream request, to bucketWriter _and_ the main http.Response
 
@@ -112,18 +112,18 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		}
 
 		defer bucketWriter.Close()
-		defer func(obj *storage.ObjectHandle) {
-			attr, err := obj.Update(d.Ctx, storage.ObjectAttrsToUpdate{
-				Metadata: map[string]string{
-					"requestUri": requestUri,
-					"key":        hex,
-					"nerd":       "poo",
-					"m5str":      m5str,
-					"base64":     baseBuf.String(),
-				},
-			})
-			log.Println(attr, err)
-		}(o)
+		// defer func(obj *storage.ObjectHandle) {
+		// 	attr, err := obj.Update(d.Ctx, storage.ObjectAttrsToUpdate{
+		// 		Metadata: map[string]string{
+		// 			"requestUri": requestUri,
+		// 			"key":        hex,
+		// 			"nerd":       "poo",
+		// 			"m5str":      m5str,
+		// 			"base64":     baseBuf.String(),
+		// 		},
+		// 	})
+		// 	log.Println(attr, err)
+		// }(o)
 
 		// merr = map[string]any{
 		// 	"bytes_written": i,
@@ -151,6 +151,7 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	} else {
 
 		//	object exists. Read from cache
+		defer rc.Close()
 
 		log.Println("CACHE HIT!")
 		// merr := map[string]any{
@@ -161,7 +162,6 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		// d.Slog(merr, logging.Info)
 
 		io.Copy(httpWriter, rc)
-		rc.Close()
 
 	}
 
