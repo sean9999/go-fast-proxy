@@ -19,7 +19,7 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 	if errors.Is(storage.ErrObjectNotExist, err) {
 
-		cacheMiss(requestUri, obj, key, d, httpReader, httpWriter)
+		cacheMiss(requestUri, key, d, httpReader, httpWriter)
 
 	} else if err != nil {
 
