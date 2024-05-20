@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"io"
-	"log"
+	"errors"
 	"net/http"
 	"path"
 
-	logging "cloud.google.com/go/logging"
+	"cloud.google.com/go/logging"
+	"cloud.google.com/go/storage"
 )
 
 func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Request) {
@@ -15,78 +14,24 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 	requestUri := httpReader.URL.RequestURI()
 	key := path.Join("plain", requestUri)
 
-	o := d.Store.Bucket(storageBucket).Object(key)
-	cacheReader, err := o.NewReader(d.Ctx)
+	obj := d.Store.Bucket(storageBucket).Object(key)
+	cacheReader, err := obj.NewReader(d.Ctx)
 
-	if err != nil {
+	if errors.Is(storage.ErrObjectNotExist, err) {
 
-		//	create a bucket writer
-		bucketWriter := o.NewWriter(d.Ctx)
+		cacheMiss(requestUri, obj, key, d, httpReader, httpWriter)
 
-		//	create a new HTTP request to upstream server
-		client := &http.Client{}
-		newAddress := fmt.Sprintf("%s%s", upstreamServer, httpReader.RequestURI)
-		redir, err := http.NewRequestWithContext(d.Ctx, http.MethodGet, newAddress, nil)
-		if err != nil {
-			merr := map[string]any{
-				"error":           err,
-				"msg":             "we tried to create a request, but it failed",
-				"key":             key,
-				"requestUri":      requestUri,
-				"upstreamAddress": newAddress,
-			}
-			d.Slog(merr, logging.Error)
-			log.Fatal(err)
+	} else if err != nil {
+
+		merr := map[string]any{
+			"err": err,
+			"msg": "there was an error reading the object from storage, but it wasn't ErrObjectNotExist",
 		}
-
-		//	send the upstream request
-		resp, err := client.Do(redir)
-		if err != nil {
-			merr := map[string]any{
-				"error":      err,
-				"msg":        "httpClient failed to Do()",
-				"key":        key,
-				"addr":       newAddress,
-				"requestUri": requestUri,
-			}
-			d.Slog(merr, logging.Alert)
-			log.Fatal(err)
-		}
-		defer resp.Body.Close()
-
-		//	Pipe the response of our upstream request
-		//	to bucketWriter and the main http.Response, simultaneously.
-		r2 := io.TeeReader(resp.Body, bucketWriter)
-		i, err := io.Copy(httpWriter, r2)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		defer bucketWriter.Close()
-
-		if err != nil {
-			log.Fatal(err)
-		} else {
-			merr := map[string]any{
-				"msg":             "cache miss",
-				"key":             key,
-				"upstreamAddress": newAddress,
-				"bytesWritten":    i,
-			}
-			d.Slog(merr, logging.Debug)
-		}
+		d.Slog(merr, logging.Alert)
 
 	} else {
 
-		//	object exists. Read from cache
-		defer cacheReader.Close()
-		merr := map[string]any{
-			"attrs": cacheReader.Attrs,
-			"msg":   "cache hit",
-			"key":   key,
-			"req":   requestUri,
-		}
-		d.Slog(merr, logging.Debug)
-		io.Copy(httpWriter, cacheReader)
+		cacheHit(requestUri, key, d, cacheReader, httpWriter)
 
 	}
 
