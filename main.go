@@ -4,12 +4,15 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 
 	"cloud.google.com/go/logging"
 )
 
 func main() {
+
+	if err := defaults(); err != nil {
+		log.Fatal(err)
+	}
 
 	log.SetFlags(log.Lshortfile)
 	ctx := context.Background()
@@ -19,7 +22,6 @@ func main() {
 
 	http.Handle("/", d)
 
-	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 		d.Slog(map[string]any{
