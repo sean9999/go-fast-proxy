@@ -13,4 +13,4 @@ build:
 	pack build --builder=$(BUILDER) $(IMAGE) -t $(IMAGE):$(SEMVER) -t $(IMAGE):$(BRANCH)
 
 push:
-	docker push -a crazyhorsecoding/gcp-goproxy
+	docker push -a $(IMAGE)
