@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+
+	"cloud.google.com/go/storage"
 )
 
 type CacheTuple struct {
@@ -112,18 +115,18 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		}
 
 		defer bucketWriter.Close()
-		// defer func(obj *storage.ObjectHandle) {
-		// 	attr, err := obj.Update(d.Ctx, storage.ObjectAttrsToUpdate{
-		// 		Metadata: map[string]string{
-		// 			"requestUri": requestUri,
-		// 			"key":        hex,
-		// 			"nerd":       "poo",
-		// 			"m5str":      m5str,
-		// 			"base64":     baseBuf.String(),
-		// 		},
-		// 	})
-		// 	log.Println(attr, err)
-		// }(o)
+		defer func(obj *storage.ObjectHandle) {
+			attr, err := obj.Update(d.Ctx, storage.ObjectAttrsToUpdate{
+				Metadata: map[string]string{
+					"requestUri": requestUri,
+					"hex":        hex.EncodeToString([]byte(requestUri)),
+					"m5str":      m5str,
+					"name":       obj.ObjectName(),
+					"base64":     baseBuf.String(),
+				},
+			})
+			log.Println(attr, err)
+		}(o)
 
 		// merr = map[string]any{
 		// 	"bytes_written": i,
