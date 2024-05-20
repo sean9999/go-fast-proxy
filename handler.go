@@ -106,7 +106,7 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 		r2 := io.TeeReader(resp.Body, bucketWriter)
 
-		o.Update(d.Ctx, storage.ObjectAttrsToUpdate{
+		attr, err := o.Update(d.Ctx, storage.ObjectAttrsToUpdate{
 			Metadata: map[string]string{
 				"requestUri": requestUri,
 				"key":        hex,
@@ -116,18 +116,8 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 			},
 		})
 
-		// Update the object to set the metadata.
-		objectAttrsToUpdate := storage.ObjectAttrsToUpdate{
-			Metadata: map[string]string{
-				"hex":  hex,
-				"base": baseBuf.String(),
-				"req":  requestUri,
-			},
-		}
-
-		if _, err := o.Update(d.Ctx, objectAttrsToUpdate); err != nil {
-			log.Fatalf("ObjectHandle(%q).Update: %s", o.BucketName(), err)
-		}
+		log.Println(attr)
+		log.Println(err)
 
 		defer bucketWriter.Close()
 		i, err := io.Copy(httpWriter, r2)

@@ -11,9 +11,9 @@ import (
 
 func main() {
 
+	log.SetFlags(log.Lshortfile)
 	ctx := context.Background()
 
-	//	doggy does all the work. good boy!
 	d := NewDoggy(ctx)
 	defer d.Teardown()
 
