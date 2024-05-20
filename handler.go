@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+
+	logging "cloud.google.com/go/logging"
 )
 
 func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Request) {
@@ -130,12 +132,12 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 	}
 
-	// merr := map[string]any{
-	// 	"msg":        "lifecycle complete",
-	// 	"requestUri": requestUri,
-	// 	"key":        key,
-	// }
-	// d.Slog(merr, logging.Debug)
+	merr := map[string]any{
+		"msg":        "lifecycle complete",
+		"requestUri": requestUri,
+		"key":        key,
+	}
+	d.Slog(merr, logging.Debug)
 
 	log.Printf("The requestUri was %s and the hash is %s\n", requestUri, key)
 }
