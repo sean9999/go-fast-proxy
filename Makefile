@@ -6,7 +6,7 @@ SEMVER := $$(git tag --sort=-version:refname | head -n 1)
 tidy:
 	go mod tidy
 
-pack:
+build:
 	pack build --builder=$(BUILDER) $(IMAGE) -t $(IMAGE):$(SEMVER) -t $(IMAGE):$(BRANCH)
 
 push:
