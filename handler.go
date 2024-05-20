@@ -82,16 +82,11 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 		defer cacheReader.Close()
 		merr := map[string]any{
 			"attrs": cacheReader.Attrs,
+			"msg":   "cache hit",
 		}
 		d.Slog(merr, logging.Debug)
 		io.Copy(httpWriter, cacheReader)
 
 	}
-
-	merr := map[string]any{
-		"requestUri": requestUri,
-		"key":        key,
-	}
-	d.Slog(merr, logging.Debug)
 
 }

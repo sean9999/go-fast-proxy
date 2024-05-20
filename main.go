@@ -32,11 +32,11 @@ func main() {
 
 	log.Printf("listening on port %s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		// merr := map[string]any{
-		// 	"err": err,
-		// 	"msg": "could not start http server",
-		// }
-		// d.Slog(merr, logging.Critical)
+		merr := map[string]any{
+			"err": err,
+			"msg": "could not start http server",
+		}
+		d.Slog(merr, logging.Critical)
 		log.Fatal(err)
 	}
 
