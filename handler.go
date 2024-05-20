@@ -108,6 +108,9 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 
 		defer bucketWriter.Close()
 		i, err := io.Copy(httpWriter, r2)
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		attr, err := o.Update(d.Ctx, storage.ObjectAttrsToUpdate{
 			Metadata: map[string]string{
@@ -119,8 +122,7 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 			},
 		})
 
-		log.Println(attr)
-		log.Println(err)
+		log.Println(attr, err)
 
 		// merr = map[string]any{
 		// 	"bytes_written": i,
