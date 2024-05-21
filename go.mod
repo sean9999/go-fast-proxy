@@ -5,6 +5,7 @@ go 1.22.1
 require (
 	cloud.google.com/go/logging v1.10.0
 	cloud.google.com/go/pubsub v1.38.0
+	cloud.google.com/go/pubsublite v1.8.1
 	cloud.google.com/go/storage v1.41.0
 )
 

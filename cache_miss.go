@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"cloud.google.com/go/pubsub"
@@ -11,7 +12,10 @@ import (
 func cacheMiss(requestUri string, key string, d *Doggy, httpReader *http.Request, httpWriter http.ResponseWriter) {
 
 	//	queue the job
-	topic := d.Pubsub.Topic(pubsubTopic)
+	topic, err := d.Pubsub.Topic(d.Ctx, pubsubTopic)
+	if err != nil {
+		log.Fatal(err)
+	}
 	payload := map[string]string{
 		"requestUri": requestUri,
 		"key":        key,

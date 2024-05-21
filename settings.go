@@ -6,7 +6,10 @@ import (
 	"os"
 )
 
+const PubsubLiteRegion = "us-central1"
+
 var pubsubTopic = os.Getenv("PUBSUB_TOPIC")
+var pubsubSubscription = os.Getenv("PUBSUB_SUB")
 var projectID = os.Getenv("PROJECT_ID")
 var storageBucket = os.Getenv("STORAGE_BUCKET")
 var port = os.Getenv("PORT")
@@ -22,6 +25,9 @@ func defaults() error {
 	}
 	if pubsubTopic == "" {
 		return fmt.Errorf("%w. PUBSUB_TOPIC needs to be set", ErrBadSettings)
+	}
+	if pubsubSubscription == "" {
+		return fmt.Errorf("%w. PUBSUB_SUB needs to be set", ErrBadSettings)
 	}
 	if port == "" {
 		port = "8080"

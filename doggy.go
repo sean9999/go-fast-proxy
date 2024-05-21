@@ -5,7 +5,7 @@ import (
 	"log"
 
 	logging "cloud.google.com/go/logging"
-	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsublite"
 	"cloud.google.com/go/storage"
 )
 
@@ -13,7 +13,7 @@ type Doggy struct {
 	Ctx    context.Context
 	Log    *logging.Client
 	Store  *storage.Client
-	Pubsub *pubsub.Client
+	Pubsub *pubsublite.AdminClient
 }
 
 func (d *Doggy) Teardown() {
@@ -33,7 +33,7 @@ func NewDoggy(ctx context.Context) *Doggy {
 		log.Fatal(err)
 	}
 
-	pubSubClient, err := pubsub.NewClient(ctx, projectID)
+	pubSubClient, err := pubsublite.NewAdminClient(ctx, PubsubLiteRegion)
 	if err != nil {
 		storageClient.Close()
 		log.Fatal(err)
