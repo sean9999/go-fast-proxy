@@ -8,64 +8,37 @@ import (
 	"cloud.google.com/go/storage"
 )
 
-type Doggy struct {
+// Workhorse is our singleton that contains references to everything we need
+type Workhorse struct {
 	Ctx   context.Context
 	Log   *logging.Client
 	Store *storage.Client
-	// Fire  *firestore.Client
 }
 
-func (d *Doggy) Teardown() {
-	d.Log.Close()
-	d.Store.Close()
-	// d.Fire.Close()
+// This should be invoked at the end of the lifecycle
+func (app *Workhorse) Teardown() {
+	app.Log.Close()
+	app.Store.Close()
 }
 
-func NewDoggy(ctx context.Context) *Doggy {
+// create a new App. Die if anything goes wrong
+func NewWorkhorse(ctx context.Context) *Workhorse {
+
 	storageClient, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	loggingClient, err := logging.NewClient(ctx, projectID)
 	if err != nil {
 		storageClient.Close()
 		log.Fatal(err)
 	}
 
-	//conf := &firebase.Config{ProjectID: projectID, DatabaseURL: fireBaseDb}
-	//app, _ := firebase.NewApp(ctx, conf)
-	// if err != nil {
-	// 	storageClient.Close()
-	// 	loggingClient.Close()
-	// 	log.Fatal(err)
-	// }
-
-	//fire, _ := app.Firestore(ctx)
-	// if err != nil {
-	// 	storageClient.Close()
-	// 	loggingClient.Close()
-	// 	log.Fatal(err)
-	// }
-
-	// fire, err := firestore.NewClientWithDatabase(ctx, projectID, fireBaseDb)
-	// if err != nil {
-	// 	storageClient.Close()
-	// 	loggingClient.Close()
-	// 	log.Fatal(err)
-	// }
-
-	// fire, err := app.Firestore(ctx)
-	// if err != nil {
-	// 	storageClient.Close()
-	// 	loggingClient.Close()
-	// 	log.Fatal(err)
-	// }
-
-	d := &Doggy{
+	app := &Workhorse{
 		Ctx:   ctx,
 		Store: storageClient,
 		Log:   loggingClient,
-		// Fire:  fire,
 	}
-	return d
+	return app
 }

@@ -10,6 +10,7 @@ import (
 
 func main() {
 
+	//	load settings and defaults from env vars
 	if err := defaults(); err != nil {
 		log.Fatal(err)
 	}
@@ -17,7 +18,7 @@ func main() {
 	log.SetFlags(log.Lshortfile)
 	ctx := context.Background()
 
-	d := NewDoggy(ctx)
+	d := NewWorkhorse(ctx)
 	defer d.Teardown()
 
 	http.Handle("/", d)
@@ -40,5 +41,9 @@ func main() {
 		d.Slog(merr, logging.Critical)
 		log.Fatal(err)
 	}
+
+	//topic := d.Pubsub.Topic(pubsubTopic)
+
+	//sub := d.Pubsub.Subscription("cache-queue-lite")
 
 }

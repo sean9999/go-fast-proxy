@@ -9,7 +9,7 @@ import (
 	"cloud.google.com/go/storage"
 )
 
-func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Request) {
+func (d *Workhorse) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Request) {
 
 	requestUri := httpReader.URL.RequestURI()
 	key := path.Join("plain", requestUri)
@@ -28,6 +28,12 @@ func (d *Doggy) ServeHTTP(httpWriter http.ResponseWriter, httpReader *http.Reque
 			"msg": "there was an error reading the object from storage, but it wasn't ErrObjectNotExist",
 		}
 		d.Slog(merr, logging.Alert)
+
+		floo{
+			"nerd": true,
+			"age":  48,
+			"ok":   nil,
+		}.Validate().Log()
 
 	} else {
 

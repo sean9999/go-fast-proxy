@@ -24,7 +24,7 @@ func defaults() error {
 		port = "8080"
 	}
 	if upstreamServer == "" {
-		upstreamServer = "https://goproxy.io"
+		upstreamServer = "https://proxy.golang.org"
 	}
 	return nil
 }

@@ -8,7 +8,7 @@ import (
 	"cloud.google.com/go/storage"
 )
 
-func cacheHit(requestUri string, key string, d *Doggy, cacheReader *storage.Reader, httpWriter http.ResponseWriter) {
+func cacheHit(requestUri string, key string, d *Workhorse, cacheReader *storage.Reader, httpWriter http.ResponseWriter) {
 
 	//	object exists. Read from cache
 	defer cacheReader.Close()

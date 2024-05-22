@@ -10,7 +10,7 @@ import (
 	"cloud.google.com/go/storage"
 )
 
-func cacheMiss(requestUri string, obj *storage.ObjectHandle, key string, d *Doggy, httpReader *http.Request, httpWriter http.ResponseWriter) {
+func cacheMiss(requestUri string, obj *storage.ObjectHandle, key string, d *Workhorse, httpReader *http.Request, httpWriter http.ResponseWriter) {
 
 	//	create a bucket writer
 	bucketWriter := obj.NewWriter(d.Ctx)
