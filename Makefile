@@ -6,9 +6,6 @@ REF := $$(git describe --dirty --tags --always)
 tidy:
 	go mod tidy
 
-ref:
-	echo $(REF)
-
 info:
 	echo image:$(IMAGE) branch:$(BRANCH) ref:$(REF) builder:$(BUILDER)
 
